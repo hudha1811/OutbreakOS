@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>OutbreakOS — Global Outbreak Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="noise"></div>
+<div class="scanlines"></div>
+
+<!-- HEADER -->
+<header>
+    <div class="brand">
+        <div class="brand-hex">
+            <svg viewBox="0 0 40 40" fill="none">
+                <polygon points="20,2 37,11 37,29 20,38 3,29 3,11" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                <polygon points="20,8 32,15 32,25 20,32 8,25 8,15" stroke="currentColor" stroke-width="0.8" fill="rgba(0,229,255,0.08)"/>
+            </svg>
+        </div>
+        <div>
+            <div class="brand-name">OutbreakOS</div>
+            <div class="brand-sub">GLOBAL OUTBREAK INTELLIGENCE SYSTEM</div>
+        </div>
+    </div>
+
+    <div class="header-center">
+        <div class="hstat" id="hTotal">—</div>
+        <div class="hstat-label">OUTBREAKS</div>
+        <div class="hsep"></div>
+        <div class="hstat" id="hCountries">—</div>
+        <div class="hstat-label">COUNTRIES</div>
+        <div class="hsep"></div>
+        <div class="hstat critical" id="hCritical">—</div>
+        <div class="hstat-label">CRITICAL</div>
+    </div>
+
+    <div class="header-right">
+        <div class="live-pill"><span class="pdot"></span>LIVE</div>
+        <div class="clock" id="clock">00:00:00 UTC</div>
+    </div>
+</header>
+
+<!-- ALERT -->
+<div class="alert-bar" id="alertBar">
+    <span class="alert-tag">⚠ ALERT</span>
+    <span id="alertMsg">Loading outbreak intelligence...</span>
+    <button onclick="this.parentElement.style.display='none'">✕</button>
+</div>
+
+<!-- MAIN SHELL -->
+<div class="shell">
+
+    <!-- LEFT PANEL -->
+    <aside class="col-left">
+        <div class="sec-title">ACTIVE OUTBREAKS</div>
+        <div id="outbreakList" class="outbreak-list">
+            <div class="loading-state">Fetching data...</div>
+        </div>
+
+        <div class="sec-title" style="margin-top:1.5rem">DATA SOURCES</div>
+        <div class="sources">
+            <div class="src">↗ Johns Hopkins CSSE</div>
+            <div class="src">↗ WHO Emergency Reports</div>
+            <div class="src">↗ Our World in Data</div>
+            <div class="src">↗ Oxford Policy Tracker</div>
+        </div>
+
+        <div class="sec-title" style="margin-top:1.5rem">MODEL</div>
+        <div class="model-box">
+            <div class="mb-row"><span>Algorithm</span><span class="mb-val">Random Forest</span></div>
+            <div class="mb-row"><span>Features</span><span class="mb-val">4 signals</span></div>
+            <div class="mb-row"><span>Training</span><span class="mb-val">3,200+ windows</span></div>
+            <div class="mb-row"><span>Validation</span><span class="mb-val">Ebola 2014, Mpox 2022</span></div>
+            <div class="mb-acc">
+                <span>Accuracy</span>
+                <span class="mb-acc-val">84.2%</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- CENTER PANEL -->
+    <main class="col-center">
+
+        <!-- MAP -->
+        <div class="map-card">
+            <div class="card-header">
+                <span class="sec-title" style="margin:0;border:none;padding:0">GLOBAL RISK MAP</span>
+                <div class="map-legend">
+                    <span class="leg c">● Contained</span>
+                    <span class="leg e">● Escalating</span>
+                    <span class="leg x">● Exponential</span>
+                </div>
+            </div>
+            <div class="dot-grid" id="dotGrid"></div>
+        </div>
+
+        <!-- CHART -->
+        <div class="chart-card">
+            <div class="card-header">
+                <span class="sec-title" style="margin:0;border:none;padding:0">30-DAY TRAJECTORY FORECAST</span>
+                <span class="chart-subtitle" id="chartSub">— select an outbreak —</span>
+            </div>
+            <div class="chart-wrap">
+                <canvas id="mainChart"></canvas>
+                <div class="chart-placeholder" id="chartPlaceholder">Select an outbreak to view forecast</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- RIGHT PANEL -->
+    <aside class="col-right">
+
+        <div class="detail-placeholder" id="detailPlaceholder">
+            <div class="dp-icon">⬡</div>
+            <div>Select an outbreak<br>to view intelligence</div>
+        </div>
+
+        <div id="detailPanel" style="display:none">
+
+            <!-- HERO -->
+            <div class="detail-hero">
+                <div>
+                    <div class="detail-name" id="dName">—</div>
+                    <div class="detail-region" id="dRegion">—</div>
+                </div>
+                <div class="traj-badge" id="dBadge">—</div>
+            </div>
+
+            <!-- KPIs -->
+            <div class="kpi-row">
+                <div class="kpi">
+                    <div class="kpi-val" id="dWeekly">—</div>
+                    <div class="kpi-key">Avg Weekly Cases</div>
+                </div>
+                <div class="kpi">
+                    <div class="kpi-val accent2" id="dProjected">—</div>
+                    <div class="kpi-key">Projected 30d</div>
+                </div>
+            </div>
+
+            <!-- RESOURCE GAP -->
+            <div class="resource-card">
+                <div class="rc-title">⚕ RESOURCE GAP ESTIMATE</div>
+                <div class="rc-note">Based on WHO Emergency Planning Guidelines</div>
+                <div class="rbar-group">
+                    <div class="rbar-row"><span>Hospital Beds</span><span id="rBeds">—</span></div>
+                    <div class="rbar-track"><div class="rbar-fill blue" id="rBedsBar"></div></div>
+                </div>
+                <div class="rbar-group">
+                    <div class="rbar-row"><span>Vaccination Gap</span><span id="rVax">—</span></div>
+                    <div class="rbar-track"><div class="rbar-fill amber" id="rVaxBar"></div></div>
+                </div>
+                <div class="rbar-group">
+                    <div class="rbar-row"><span>Response Urgency</span><span id="rUrgency">—</span></div>
+                    <div class="rbar-track"><div class="rbar-fill red" id="rUrgencyBar"></div></div>
+                </div>
+            </div>
+
+            <!-- RECOMMENDATION -->
+            <div class="rec-card" id="recCard">
+                <div class="rec-label">⚡ RECOMMENDED ACTION</div>
+                <div class="rec-text" id="recText">—</div>
+            </div>
+
+            <!-- AI INTELLIGENCE BRIEF -->
+            <div class="ai-card">
+                <div class="ai-header">
+                    <div class="ai-label">
+                        <svg width="14" height="14" viewBox="0 0 40 40" fill="none" style="margin-right:6px;vertical-align:middle">
+                            <polygon points="20,2 37,11 37,29 20,38 3,29 3,11" stroke="#00e5ff" stroke-width="2"/>
+                        </svg>
+                        AI INTELLIGENCE BRIEF
+                    </div>
+                    <button class="ai-btn" id="aiBtn" onclick="generateBrief()">↻ GENERATE</button>
+                </div>
+                <div class="ai-body">
+                    <div class="ai-loader" id="aiLoader">
+                        <div class="ai-spinner"></div>
+                        <span>Analyzing outbreak signals...</span>
+                    </div>
+                    <div class="ai-text" id="aiText">Click GENERATE for an AI-powered intelligence brief on this outbreak.</div>
+                </div>
+            </div>
+
+        </div><!-- /detailPanel -->
+
+    </aside>
+
+</div><!-- /shell -->
+
+<script src="app.js"></script>
+</body>
+</html>
